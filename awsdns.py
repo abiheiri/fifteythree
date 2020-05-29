@@ -6,7 +6,7 @@
 import sys, argparse, boto3, json
 
 prog='awsdns'
-version='0.1'
+version='0.2'
 author='Al Biheiri (al@forgottheaddress.com)'
 
 client = boto3.client('route53')
@@ -33,6 +33,12 @@ def list_domains():
 
 # Method for filtering and targeting a specific domain/zone, based on users args
 def selected_zone_id(domain):
+
+    # Listing a specific zone - (aws route53 get-hosted-zone --id Z067920437CH29MWAVKLI)
+    #zone_picked = client.get_hosted_zone (Id='Z05828351X4Y2J14RF6S5')
+    #results_formatted = json.dumps(zone_picked, indent=4, sort_keys=True)
+    #print (results_formatted)
+
     # find the 'Id:' and parse from get_domains()
     #
     # "Id": "/hostedzone/Z05828351X4Y2J14RF6S5",
@@ -50,22 +56,44 @@ def selected_zone_id(domain):
 
 
 # Method for displaying all records associated to a specific domain/zone
-def do_get(domain):
+def do_get(domain, record, name):
     
     get_domains()
     
     # pass argparse result from do_get(domain) to the function
     selected_zone_id(domain)
-            
-    # Listing a specific zone - (aws route53 get-hosted-zone --id Z067920437CH29MWAVKLI)
-    #zone_picked = client.get_hosted_zone (Id='Z05828351X4Y2J14RF6S5')
-    #results_formatted = json.dumps(zone_picked, indent=4, sort_keys=True)
-    #print (results_formatted)
 
-    # Listing all records in a zone (aws route53 list-resource-record-sets --hosted-zone-id Z067920437CH29MWAVKLI)
-    collected_records = client.list_resource_record_sets(HostedZoneId = my_zone_id)
-    records_formatted = json.dumps(collected_records, indent=4, sort_keys=True)
-    print (records_formatted)
+    #        
+    # If there is a record_type and a name
+    #
+    if record is not None and name is not None:
+        # print ("You typed both a record_type and name: ", record, name, domain)
+        collected_records = client.list_resource_record_sets(
+            HostedZoneId = my_zone_id,
+            StartRecordName=f'{name}.{domain}',
+            StartRecordType=record,
+            )
+        records_formatted = json.dumps(collected_records, indent=4, sort_keys=True)
+        print (records_formatted)
+
+    #        
+    # elseIf there is a record_type only
+    #    
+    elif record is not None:
+        # print ("You typed only a record_type: ", record)
+        collected_records = client.list_resource_record_sets(
+            HostedZoneId = my_zone_id,
+            StartRecordName='*',
+            StartRecordType=record,
+            )
+        records_formatted = json.dumps(collected_records, indent=4, sort_keys=True)
+        print (records_formatted)
+
+    else:
+        # Listing all records in a zone (aws route53 list-resource-record-sets --hosted-zone-id Z067920437CH29MWAVKLI)
+        collected_records = client.list_resource_record_sets(HostedZoneId = my_zone_id)
+        records_formatted = json.dumps(collected_records, indent=4, sort_keys=True)
+        print (records_formatted)
 
 
 
@@ -77,9 +105,9 @@ def do_add(domain, record, name, value, ttl):
 
 
     print ("Zone Name: ", domain)
-    print ("Zone Id: ", my_zone_id)
+    print ("Zone Id: g", my_zone_id)
 
-    client.change_resource_record_sets(
+    trigger = client.change_resource_record_sets(
         HostedZoneId=my_zone_id,
         ChangeBatch={
             'Comment': 'Changed by: awdns.py',
@@ -87,7 +115,7 @@ def do_add(domain, record, name, value, ttl):
                 {
                     'Action': 'UPSERT',
                     'ResourceRecordSet': {
-                        'Name': name,
+                        'Name': f'{name}.{domain}',
                         'Type': record,
                         'TTL': ttl,
                         'ResourceRecords': [{ "Value": value}]
@@ -96,10 +124,45 @@ def do_add(domain, record, name, value, ttl):
             ]
         }
     )
+    print(trigger)
+
+
+def do_delete(domain, record, name, value, ttl):
+    get_domains()
+
+    # pass argparse result from do_get(domain) to the function
+    selected_zone_id(domain)
+
+
+    print ("Zone Name: ", domain)
+    print ("Zone Id: g", my_zone_id)
+
+    trigger = client.change_resource_record_sets(
+        HostedZoneId=my_zone_id,
+        ChangeBatch={
+            'Comment': 'Deleted by: awdns.py',
+            'Changes': [
+                {
+                    'Action': 'DELETE',
+                    'ResourceRecordSet': {
+                        'Name': f'{name}.{domain}',
+                        'Type': record,
+                        'TTL': ttl,
+                        'ResourceRecords': [{ "Value": value}]
+                    }
+                },
+            ]
+        }
+    )
+    print(trigger)
 
 
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(
+    epilog='''
+    Deleting a record requires exact values for: -rt -n -v --ttl. If any of these are not correct values, it will fail to delete.
+    '''
+)
 
 parser.add_argument('--version', action='version', version='{} {}'.format(prog, version))
 
@@ -111,25 +174,27 @@ group.add_argument("-r", dest="replace", metavar="replace", help="replce record 
 group.add_argument("-d", dest="delete", metavar="delete", help="delete record a domain")
 
 
-parser.add_argument("-rt", dest="record", metavar="record type", choices=['A','AAAA','CNAME','TXT','MX','SRV','SOA','NS'], help="A,AAAA,CNAME,TXT,MX,SRV,SOA,NS")
-parser.add_argument("-n", dest="name", metavar="name", help="the dns record name")
+parser.add_argument("-rt", dest="record", default=None, metavar="record type", choices=['A','AAAA','CNAME','TXT','MX','SRV','SOA','NS'], help="A,AAAA,CNAME,TXT,MX,SRV,SOA,NS")
+parser.add_argument("-n", dest="name", default=None, metavar="name", help="the dns record name")
 parser.add_argument("-v", dest="value", metavar="value", help="the value of the dns record (ie. ip address)")
 parser.add_argument('--ttl', type=int, default=3600, help='default is 3600 if this argument is not supplied')
 
 args = parser.parse_args()
 
 
-# TODO: intelligent checking of acceptable arg passing
 
 if args.ls:
     list_domains()
 
 elif args.get:
-    do_get(args.get)
-    # print (len(sys.argv))
+    do_get(args.get, args.record, args.name)
 
-elif args.add:
+# Add or Replace a record run the same function
+elif args.add or args.replace:
     do_add(args.add, args.record, args.name, args.value, args.ttl)
 
+elif args.delete:
+    do_delete(args.delete, args.record, args.name, args.value, args.ttl)
+
 else:
-    print("nothing")
+    print("run ", sys.argv[0], "-h" )
