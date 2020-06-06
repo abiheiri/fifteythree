@@ -1,4 +1,6 @@
 # fifteythree
+[![Build Status](https://travis-ci.com/abiheiri/fifteythree.svg?branch=master)](https://travis-ci.com/github/abiheiri/fifteythree)
+
 
 A tool to manage DNS records in AWS Route 53
 
