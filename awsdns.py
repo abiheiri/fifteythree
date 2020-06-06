@@ -170,7 +170,7 @@ group = parser.add_mutually_exclusive_group()
 group.add_argument("-ls", dest="ls", action="store_true", help="list domain you own")
 group.add_argument("-g", dest="get", metavar='get', help="get all records from a domain")
 group.add_argument("-a", dest="add", metavar="add", help="add to domain")
-group.add_argument("-r", dest="replace", metavar="replace", help="replce record in a domain")
+group.add_argument("-r", dest="replace", metavar="replace", help="replace record in a domain")
 group.add_argument("-d", dest="delete", metavar="delete", help="delete record a domain")
 
 
