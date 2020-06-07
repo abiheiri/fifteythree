@@ -6,8 +6,8 @@
 import sys, argparse, boto3, json
 
 prog='awsdns'
-version='0.2'
-author='Al Biheiri (al@forgottheaddress.com)'
+version='0.5'
+author='Al Biheiri (al@forgottheaddress.com): الحارث بحيري'
 
 client = boto3.client('route53')
 
@@ -157,44 +157,52 @@ def do_delete(domain, record, name, value, ttl):
     print(trigger)
 
 
+def parse_args(args):
+    parser = argparse.ArgumentParser(
+        epilog='''
+        Deleting a record requires exact values for: -rt -n -v --ttl. If any of these are not correct values, it will fail to delete.
+        '''
+    )
 
-parser = argparse.ArgumentParser(
-    epilog='''
-    Deleting a record requires exact values for: -rt -n -v --ttl. If any of these are not correct values, it will fail to delete.
-    '''
-)
+    parser.add_argument('--version', action='version', version='{} {}'.format(prog, version))
 
-parser.add_argument('--version', action='version', version='{} {}'.format(prog, version))
-
-group = parser.add_mutually_exclusive_group()
-group.add_argument("-ls", dest="ls", action="store_true", help="list domain you own")
-group.add_argument("-g", dest="get", metavar='get', help="get all records from a domain")
-group.add_argument("-a", dest="add", metavar="add", help="add to domain")
-group.add_argument("-r", dest="replace", metavar="replace", help="replace record in a domain")
-group.add_argument("-d", dest="delete", metavar="delete", help="delete record a domain")
-
-
-parser.add_argument("-rt", dest="record", default=None, metavar="record type", choices=['A','AAAA','CNAME','TXT','MX','SRV','SOA','NS'], help="A,AAAA,CNAME,TXT,MX,SRV,SOA,NS")
-parser.add_argument("-n", dest="name", default=None, metavar="name", help="the dns record name")
-parser.add_argument("-v", dest="value", metavar="value", help="the value of the dns record (ie. ip address)")
-parser.add_argument('--ttl', type=int, default=3600, help='default is 3600 if this argument is not supplied')
-
-args = parser.parse_args()
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-ls", dest="ls", action="store_true", help="list domain you own")
+    group.add_argument("-g", dest="get", metavar='get', help="get all records from a domain")
+    group.add_argument("-a", dest="add", metavar="add", help="add to domain")
+    group.add_argument("-r", dest="replace", metavar="replace", help="replace record in a domain")
+    group.add_argument("-d", dest="delete", metavar="delete", help="delete record a domain")
+    group.add_argument("--author", dest="author", action="store_true", help="print developer info")
 
 
+    parser.add_argument("-rt", dest="record", default=None, metavar="record type", choices=['A','AAAA','CNAME','TXT','MX','SRV','SOA','NS'], help="A,AAAA,CNAME,TXT,MX,SRV,SOA,NS")
+    parser.add_argument("-n", dest="name", default=None, metavar="name", help="the dns record name")
+    parser.add_argument("-v", dest="value", metavar="value", help="the value of the dns record (ie. ip address)")
+    parser.add_argument('--ttl', type=int, default=3600, help='default is 3600 if this argument is not supplied')
 
-if args.ls:
-    list_domains()
+    args = parser.parse_args()
 
-elif args.get:
-    do_get(args.get, args.record, args.name)
 
-# Add or Replace a record run the same function
-elif args.add or args.replace:
-    do_add(args.add, args.record, args.name, args.value, args.ttl)
 
-elif args.delete:
-    do_delete(args.delete, args.record, args.name, args.value, args.ttl)
+    if args.ls:
+        list_domains()
 
-else:
-    print("run ", sys.argv[0], "-h" )
+    elif args.get:
+        do_get(args.get, args.record, args.name)
+
+    # Add or Replace a record run the same function
+    elif args.add or args.replace:
+        do_add(args.add, args.record, args.name, args.value, args.ttl)
+
+    elif args.delete:
+        do_delete(args.delete, args.record, args.name, args.value, args.ttl)
+
+    elif args.author:
+        print (author)
+
+    else:
+        print("run ", sys.argv[0], "-h" )
+
+
+if __name__ == "__main__":
+    parse_args(sys.argv[1:])
