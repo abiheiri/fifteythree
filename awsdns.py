@@ -1,13 +1,14 @@
 #!/usr/bin/env python
-#
-# A tool I use to mange DNS at AWS
-#
+
+'''
+A tool I use to mange DNS at AWS
+'''
 
 import sys, argparse, boto3, json
 
-prog='awsdns'
-version='0.5'
-author='Al Biheiri (al@forgottheaddress.com): الحارث بحيري'
+prog = 'awsdns'
+version = '0.5'
+author = 'Al Biheiri (al@forgottheaddress.com): الحارث بحيري'
 
 client = boto3.client('route53')
 
@@ -55,49 +56,49 @@ def selected_zone_id(domain):
             # print(val.replace("/hostedzone/",""))
             global my_zone_id
             # strip the value ie: "/hostedzone/Z05828351X4Y2J14RF6S5"
-            my_zone_id = val.replace("/hostedzone/","")
+            my_zone_id = val.replace("/hostedzone/", "")
 
 
 
 # Method for displaying all records associated to a specific domain/zone
 def do_get(domain, record, name):
-    
     get_domains()
-    
+
     # pass argparse result from do_get(domain) to the function
     selected_zone_id(domain)
 
-    #        
+    #
     # If there is a record_type and a name
     #
     if record is not None and name is not None:
         # print ("You typed both a record_type and name: ", record, name, domain)
         collected_records = client.list_resource_record_sets(
-            HostedZoneId = my_zone_id,
+            HostedZoneId=my_zone_id,
             StartRecordName=f'{name}.{domain}',
             StartRecordType=record,
             )
         records_formatted = json.dumps(collected_records, indent=4, sort_keys=True)
-        print (records_formatted)
+        print(records_formatted)
 
-    #        
+    #
     # elseIf there is a record_type only
-    #    
+    #
     elif record is not None:
         # print ("You typed only a record_type: ", record)
         collected_records = client.list_resource_record_sets(
-            HostedZoneId = my_zone_id,
+            HostedZoneId=my_zone_id,
             StartRecordName='*',
             StartRecordType=record,
             )
         records_formatted = json.dumps(collected_records, indent=4, sort_keys=True)
-        print (records_formatted)
+        print(records_formatted)
 
     else:
-        # Listing all records in a zone (aws route53 list-resource-record-sets --hosted-zone-id Z067920437CH29MWAVKLI)
-        collected_records = client.list_resource_record_sets(HostedZoneId = my_zone_id)
+        # Listing all records in a zone (
+        # aws route53 list-resource-record-sets --hosted-zone-id Z067920437CH29MWAVKLI)
+        collected_records = client.list_resource_record_sets(HostedZoneId=my_zone_id)
         records_formatted = json.dumps(collected_records, indent=4, sort_keys=True)
-        print (records_formatted)
+        print(records_formatted)
 
 
 
@@ -108,8 +109,8 @@ def do_add(domain, record, name, value, ttl):
     selected_zone_id(domain)
 
 
-    print ("Zone Name: ", domain)
-    print ("Zone Id: g", my_zone_id)
+    print("Zone Name: ", domain)
+    print("Zone Id: g", my_zone_id)
 
     trigger = client.change_resource_record_sets(
         HostedZoneId=my_zone_id,
@@ -122,7 +123,7 @@ def do_add(domain, record, name, value, ttl):
                         'Name': f'{name}.{domain}',
                         'Type': record,
                         'TTL': ttl,
-                        'ResourceRecords': [{ "Value": value}]
+                        'ResourceRecords': [{"Value": value}]
                     }
                 },
             ]
@@ -138,8 +139,8 @@ def do_delete(domain, record, name, value, ttl):
     selected_zone_id(domain)
 
 
-    print ("Zone Name: ", domain)
-    print ("Zone Id: g", my_zone_id)
+    print("Zone Name: ", domain)
+    print("Zone Id: g", my_zone_id)
 
     trigger = client.change_resource_record_sets(
         HostedZoneId=my_zone_id,
@@ -152,7 +153,7 @@ def do_delete(domain, record, name, value, ttl):
                         'Name': f'{name}.{domain}',
                         'Type': record,
                         'TTL': ttl,
-                        'ResourceRecords': [{ "Value": value}]
+                        'ResourceRecords': [{"Value": value}]
                     }
                 },
             ]
@@ -181,8 +182,9 @@ def parse_args(args):
     group.add_argument("-d", dest="delete", metavar="delete", help="delete record a domain")
     group.add_argument("--author", dest="author", action="store_true", help="print developer info")
 
+
     parser.add_argument("--debug", dest="debug", default=None, action="store_true", help="used in tandem with -ls to print more")
-    parser.add_argument("-rt", dest="record", default=None, metavar="record type", choices=['A','AAAA','CNAME','TXT','MX','SRV','SOA','NS'], help="A,AAAA,CNAME,TXT,MX,SRV,SOA,NS")
+    parser.add_argument("-rt", dest="record", default=None, metavar="record type", choices=['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'SRV', 'SOA', 'NS'], help="A,AAAA,CNAME,TXT,MX,SRV,SOA,NS")
     parser.add_argument("-n", dest="name", default=None, metavar="name", help="the dns record name")
     parser.add_argument("-v", dest="value", metavar="value", help="the value of the dns record (ie. ip address)")
     parser.add_argument('--ttl', type=int, default=3600, help='default is 3600 if this argument is not supplied')
@@ -206,10 +208,10 @@ def parse_args(args):
         do_delete(args.delete, args.record, args.name, args.value, args.ttl)
 
     elif args.author:
-        print (author)
+        print(author)
 
     else:
-        print("run ", sys.argv[0], "-h" )
+        print("run ", sys.argv[0], "-h")
 
 
 if __name__ == "__main__":
