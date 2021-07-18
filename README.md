@@ -9,10 +9,24 @@ A tool to manage DNS records in AWS Route 53
 * Python v3+
 * [AWS SDK](https://aws.amazon.com/tools/) (specifically the boto3 library)
 
-On MacOS, you can install the module like so:  
+On MacOS, you can do:  
 
     brew install pipenv
     pipenv install boto3
+
+Youll also need your AWS credentials configured. Make sure your ~/.aws/credentials file in Unix looks like this:
+
+```
+[MyProfile1]
+aws_access_key_id = yourAccessId
+aws_secret_access_key = yourSecretKey
+
+[MyProfile2]
+aws_access_key_id = yourAccessId
+aws_secret_access_key = yourSecretKey
+```
+or use `aws configure` command from https://aws.amazon.
+com/cli/
 
 ## Example Usage
 
