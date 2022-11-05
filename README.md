@@ -5,14 +5,21 @@ A tool to manage DNS records in AWS Route 53
 ## Requirements
 
 * Python v3+
-* [AWS SDK](https://aws.amazon.com/tools/) (specifically the boto3 library)
+* [AWS SDK](https://aws.amazon.com/tools/) (specifically the boto3 
+library)
 
-On MacOS, you can do:  
+On MacOS, you can use the brew package manager :  
 
+    # Isolate your python environment with pipenv
     brew install pipenv
+
+    # Drop into a isolated environment
+    pipenv shell
+
+    # Install AWS SDK
     pipenv install boto3
 
-Youll also need your AWS credentials configured. Make sure your ~/.aws/credentials file in Unix looks like this:
+Youll also need your AWS credentials configured. Make sure your `~/.aws/credentials` file in Unix looks like this:
 
 ```
 [MyProfile1]
@@ -23,8 +30,7 @@ aws_secret_access_key = yourSecretKey
 aws_access_key_id = yourAccessId
 aws_secret_access_key = yourSecretKey
 ```
-or use `aws configure` command from https://aws.amazon.
-com/cli/
+or use `aws configure` command from https://aws.amazon.com/cli/
 
 ## Example Usage
 
@@ -73,4 +79,4 @@ com/cli/
 
 ### Limitations
 
-Regions are not supported at the time.
+Regions are not supported, instead they are automatically inherited from your aws config file.
